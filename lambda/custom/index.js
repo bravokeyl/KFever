@@ -5,16 +5,19 @@ const Alexa = require('ask-sdk-core');
 
 const LaunchRequestHandler = {
   canHandle(handlerInput) {
-    return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
+    const request = handlerInput.requestEnvelope.request;
+    return request.type === 'LaunchRequest';
   },
   handle(handlerInput) {
-    const speechText = 'Welcome to the Alexa Skills Kit, you can say hello!';
+    const attributesManager = handlerInput.attributesManager;
+    const responseBuilder = handlerInput.responseBuilder;
 
-    return handlerInput.responseBuilder
-      .speak(speechText)
-      .reprompt(speechText)
-      .withSimpleCard('Hello World', speechText)
-      .getResponse();
+    const requestAttributes = attributesManager.getRequestAttributes();
+    const speechOutput = 'Welcome to Korean Drama Fever, what should you want me to do?';
+    return responseBuilder
+        .speak(speechOutput)
+        .reprompt(speechOutput)
+        .getResponse();
   },
 };
 
