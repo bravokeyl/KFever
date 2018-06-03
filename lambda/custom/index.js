@@ -6,6 +6,7 @@ const Alexa = require('ask-sdk-core');
 const moment = require('moment');
 
 const { getDramas }  = require('./db');
+const { launchText } = require('./text');
 
 const tableName = process.env.SRC_DDB;
 const todayDate = moment().format('YYYY/MM/DD');
@@ -20,7 +21,7 @@ const LaunchRequestHandler = {
     const responseBuilder = handlerInput.responseBuilder;
 
     const requestAttributes = attributesManager.getRequestAttributes();
-    const speechOutput = 'Welcome to Korean Drama Fever, what should you want me to do?';
+    const speechOutput = `<speak>${launchText}</speak>`;
     return responseBuilder
         .speak(speechOutput)
         .reprompt(speechOutput)
@@ -28,13 +29,31 @@ const LaunchRequestHandler = {
   },
 };
 
-const HelloWorldIntentHandler = {
+const PreferencesIntentHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'IntentRequest'
-      && handlerInput.requestEnvelope.request.intent.name === 'HelloWorldIntent';
+      && handlerInput.requestEnvelope.request.intent.name === 'PreferencesIntent';
   },
   handle(handlerInput) {
-    const speechText = 'Hello World!';
+    console.log('Preferences Intent Handler', handlerInput.requestEnvelope.request);
+    const speechText = 'Which genre do you like more?';
+
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .withSimpleCard('KFever', speechText)
+      .getResponse();
+  },
+};
+
+const GenreIntentHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && handlerInput.requestEnvelope.request.intent.name === 'GenreIntent';
+  },
+  handle(handlerInput) {
+    console.log('Genre Intent Handler', handlerInput.requestEnvelope.request);
+    let dsrc = handlerInput.requestEnvelope.request.intent.slots.DramaGenre;
+    const speechText = 'Great! Let me your prefered genre as';
 
     return handlerInput.responseBuilder
       .speak(speechText)
@@ -60,7 +79,7 @@ const ListDramasIntentHandler = {
       .then((data)=>{
         if(data.Items && data.Items.length > 0) {
           const dlist = data.Items[0].list.join(', <break time="600ms" />');
-          const speechText = `<speak>Here are some of the available dramas on ${dsrc}.${dlist}</speak>`;
+          const speechText = `<speak>Here are some of the available dramas on ${dsrc}.<break time="1000ms" />${dlist}</speak>`;
           console.log('Hola Pithre!', dlist);
           return handlerInput.responseBuilder
             .speak(speechText)
@@ -143,7 +162,8 @@ exports.handler = skillBuilder
   .addRequestHandlers(
     LaunchRequestHandler,
     ListDramasIntentHandler,
-    HelloWorldIntentHandler,
+    PreferencesIntentHandler,
+    GenreIntentHandler,
     HelpIntentHandler,
     CancelAndStopIntentHandler,
     SessionEndedRequestHandler
